@@ -446,42 +446,33 @@ void RequestHandler(ZmqMsg &request)
 
    if(action=="CONFIG")
       ScriptConfiguration(incomingMessage);
-   else
-      if(action=="ACCOUNT")
-         GetAccountInfo();
-      else
-         if(action=="BALANCE")
-            GetBalanceInfo();
-         else
-            if(action=="HISTORY")
-               HistoryInfo(incomingMessage);
-            else
-               if(action=="TRADE")
-                  TradingModule(incomingMessage);
-               else
-                  if(action=="POSITIONS")
-                     GetPositions(incomingMessage);
-                  else
-                     if(action=="ORDERS")
-                        GetOrders(incomingMessage);
-                     else
-                        if(action=="RESET")
-                           ResetSubscriptionsAndIndicators();
-                        else
+   else if (action=="ACCOUNT")
+      GetAccountInfo();
+   else if(action=="BALANCE")
+      GetBalanceInfo();
+   else if(action=="HISTORY")
+      HistoryInfo(incomingMessage);
+   else if(action=="TRADE")
+      TradingModule(incomingMessage);
+   else if(action=="POSITIONS")
+      GetPositions(incomingMessage);
+   else if(action=="ORDERS")
+      GetOrders(incomingMessage);
+   else if(action=="RESET")
+      ResetSubscriptionsAndIndicators();
 #ifdef START_INDICATOR
-                           if(action=="INDICATOR")
-                              IndicatorControl(incomingMessage);
-                           else
+   else if(action=="INDICATOR")
+      IndicatorControl(incomingMessage);
 #endif
 #ifdef CHART_CONTROL
-                              if(action=="CHART")
-                                 ChartControl(incomingMessage);
-                              else
+   else if(action=="CHART")
+      ChartControl(incomingMessage);
 #endif
-                                {
-                                 mControl.mSetUserError(65538, GetErrorID(65538));
-                                 CheckError(__FUNCTION__);
-                                }
+   else
+      {
+         mControl.mSetUserError(65538, GetErrorID(65538));
+         CheckError(__FUNCTION__);
+      }
 
 
   }
@@ -494,13 +485,33 @@ void ScriptConfiguration(CJAVal &dataObject)
 
    string symbol=dataObject["symbol"].ToStr();
    string chartTF=dataObject["chartTF"].ToStr();
+   string remove="false";
+   if(dataObject.HasKey("remove"))
+      remove=dataObject["remove"].ToStr();
 
-   ArrayResize(symbolSubscriptions, symbolSubscriptionCount+1);
-   symbolSubscriptions[symbolSubscriptionCount].symbol = symbol;
-   symbolSubscriptions[symbolSubscriptionCount].chartTf = chartTF;
-// to initialze with value 0 skips the first price
-   symbolSubscriptions[symbolSubscriptionCount].lastBar = 0;
-   symbolSubscriptionCount++;
+   if(remove=="TRUE")
+      {
+         int symbolIndex=-1;
+         for(int i=0; i<ArraySize(symbolSubscriptions); i++)
+            {
+               if(symbolSubscriptions[i].symbol==symbol && symbolSubscriptions[i].chartTf==chartTF)
+                  {
+                     symbolIndex=i;
+                     break;
+                  }
+            }
+         if(symbolIndex>-1)
+            ArrayRemove(symbolSubscriptions,symbolIndex,1);
+      }
+   else
+      {
+         ArrayResize(symbolSubscriptions, symbolSubscriptionCount+1);
+         symbolSubscriptions[symbolSubscriptionCount].symbol = symbol;
+         symbolSubscriptions[symbolSubscriptionCount].chartTf = chartTF;
+      // to initialze with value 0 skips the first price
+         symbolSubscriptions[symbolSubscriptionCount].lastBar = 0;
+         symbolSubscriptionCount++;
+      }
 
    mControl.mResetLastError();
    SymbolInfoString(symbol, SYMBOL_DESCRIPTION);
