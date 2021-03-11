@@ -293,7 +293,7 @@ void StreamPriceData()
       if(TerminalInfoInteger(TERMINAL_CONNECTED))
         {
          connectedFlag=true;
-         for(int i=0; i<symbolSubscriptionCount; i++)
+         for(int i=ArraySize(symbolSubscriptions)-1; i>=0; i--)
            {
             string symbol=symbolSubscriptions[i].symbol;
             string chartTF=symbolSubscriptions[i].chartTf;
@@ -492,7 +492,7 @@ void ScriptConfiguration(CJAVal &dataObject)
    if(remove=="TRUE")
       {
          int symbolIndex=-1;
-         for(int i=0; i<ArraySize(symbolSubscriptions); i++)
+         for(int i=ArraySize(symbolSubscriptions)-1; i>=0; i--)
             {
                if(symbolSubscriptions[i].symbol==symbol && symbolSubscriptions[i].chartTf==chartTF)
                   {
