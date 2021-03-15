@@ -43,9 +43,9 @@ int STR_PORT=15558;
 // ZeroMQ Connections
 Context context("MQL5 JSON API");
 Socket sysSocket(context,ZMQ_REP);
-Socket dataSocket(context,ZMQ_PUSH);
-Socket liveSocket(context,ZMQ_PUSH);
-Socket streamSocket(context,ZMQ_PUSH);
+Socket dataSocket(context,ZMQ_PUB);
+Socket liveSocket(context,ZMQ_PUB);
+Socket streamSocket(context,ZMQ_PUB);
 
 // Load MQL5-JSON-API includes
 // Required:
@@ -56,7 +56,7 @@ Socket streamSocket(context,ZMQ_PUSH);
 #include <MQL5-JSON_API/ChartControl.mqh>
 
 // Global variables \\
-bool debug = false;
+bool debug = true;
 bool liveStream = true;
 bool connectedFlag = true;
 int deInitReason = -1;
@@ -202,7 +202,15 @@ int OnInit()
       for(int i=0; i<bindAttemtps; i++)
         {
          if(BindSockets())
-            return(INIT_SUCCEEDED);
+            {
+               if (MQLInfoInteger(MQL_TESTER))
+                  {
+                     ZmqMsg request;
+                     sysSocket.recv(request);
+                     sysSocket.send("ok");
+                  }            
+               return(INIT_SUCCEEDED);
+            }
          else
            {
             Print("Binding sockets failed. Waiting ", bindSocketsDelay, " seconds to try again...");
@@ -213,7 +221,7 @@ int OnInit()
       Print("Binding of sockets failed permanently.");
       return(INIT_FAILED);
      }
-
+   
    return(INIT_SUCCEEDED);
   }
 
